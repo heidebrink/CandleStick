@@ -111,6 +111,13 @@
   border-color: #007bff;
 }
 
+.session-app {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  color: #28a745;
+}
+
 .session-user {
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -124,6 +131,41 @@
   font-size: 0.75rem;
   color: #999;
   font-family: monospace;
+}
+
+.session-filters {
+  padding: 0 1rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.clear-filters {
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.clear-filters:hover {
+  background: #e9ecef;
 }
 
 .session-meta {

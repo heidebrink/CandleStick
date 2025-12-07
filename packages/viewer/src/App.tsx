@@ -11,6 +11,7 @@ interface Session {
   userId?: string;
   userEmail?: string;
   userName?: string;
+  appName?: string;
   userAgent?: string;
   screenResolution?: string;
 }

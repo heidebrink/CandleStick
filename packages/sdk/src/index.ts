@@ -7,6 +7,7 @@ export interface SessionTrackerConfig {
   userId?: string;
   userEmail?: string;
   userName?: string;
+  appName?: string;
   metadata?: Record<string, any>;
 }
 
@@ -28,6 +29,7 @@ export class SessionTracker {
       userId: config.userId,
       userEmail: config.userEmail,
       userName: config.userName,
+      appName: config.appName,
       ...config.metadata,
       userAgent: navigator.userAgent,
       screenResolution: `${window.screen.width}x${window.screen.height}`,

@@ -65,10 +65,11 @@ See the `examples/` folder for framework-specific integration examples.
 SessionTracker.init({
   apiEndpoint: 'http://localhost:3001/api',  // Required
   
-  // User identification (recommended)
+  // User & app identification (recommended)
   userId: 'user123',                          // User ID from your system
   userName: 'John Doe',                       // User's display name
   userEmail: 'john@example.com',              // User's email
+  appName: 'My Web App',                      // Application name
   
   // Other options
   sessionId: 'custom-id',                     // Optional: Custom session ID
@@ -88,7 +89,8 @@ SessionTracker.init({
   apiEndpoint: '/api',
   userId: '@User.Identity.Name',
   userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
-  userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value'
+  userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
+  appName: 'My ASP.NET MVC App'
 });
 ```
 
@@ -98,7 +100,8 @@ SessionTracker.init({
   apiEndpoint: '/api',
   userId: '<?php echo $_SESSION["user_id"]; ?>',
   userName: '<?php echo $_SESSION["user_name"]; ?>',
-  userEmail: '<?php echo $_SESSION["user_email"]; ?>'
+  userEmail: '<?php echo $_SESSION["user_email"]; ?>',
+  appName: 'My PHP App'
 });
 ```
 

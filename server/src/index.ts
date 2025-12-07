@@ -23,6 +23,7 @@ interface SessionData {
     userId?: string;
     userEmail?: string;
     userName?: string;
+    appName?: string;
     userAgent?: string;
     screenResolution?: string;
     [key: string]: any;
@@ -46,6 +47,7 @@ app.get('/api/sessions', async (req, res) => {
             userId: session.metadata?.userId,
             userEmail: session.metadata?.userEmail,
             userName: session.metadata?.userName,
+            appName: session.metadata?.appName,
             userAgent: session.metadata?.userAgent,
             screenResolution: session.metadata?.screenResolution
           };

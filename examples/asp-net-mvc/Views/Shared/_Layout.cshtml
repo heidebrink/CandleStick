@@ -34,6 +34,7 @@
                 userId: '@User.Identity.Name',
                 userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
                 userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
+                appName: 'My ASP.NET MVC App',
                 metadata: {
                     environment: '@ViewData["Environment"]',
                     userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'

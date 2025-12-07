@@ -15,7 +15,8 @@ export default function TestPage() {
         apiEndpoint: '/api',
         userId: 'demo-user-123',
         userName: 'Demo User',
-        userEmail: 'demo@example.com'
+        userEmail: 'demo@example.com',
+        appName: 'Session Tracker Demo'
       });
       setSessionId(tracker.getSessionId());
       setIsTracking(true);

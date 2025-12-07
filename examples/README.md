@@ -81,6 +81,7 @@ SessionTracker.init({
   userId: 'user123',                          // Optional: User ID from your system
   userName: 'John Doe',                       // Optional: User's display name
   userEmail: 'john@example.com',              // Optional: User's email
+  appName: 'My Web App',                      // Optional: Application name
   
   // Other options
   sessionId: 'custom-id',                     // Optional: Custom session ID

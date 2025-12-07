@@ -31,7 +31,8 @@
                 apiEndpoint: 'http://localhost:3001/api',
                 userId: '@User.Identity.Name',
                 userName: '@User.Identity.Name',
-                userEmail: '@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value'
+                userEmail: '@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value',
+                appName: 'My Blazor App'
             });
             
             console.log('Blazor session tracking started:', tracker.getSessionId());

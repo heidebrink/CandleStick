@@ -24,6 +24,7 @@
             userId: '<?php echo $_SESSION["user_id"] ?? "guest"; ?>',
             userName: '<?php echo $_SESSION["user_name"] ?? "Guest User"; ?>',
             userEmail: '<?php echo $_SESSION["user_email"] ?? ""; ?>',
+            appName: 'My PHP Application',
             metadata: {
                 phpSessionId: '<?php echo session_id(); ?>',
                 accountType: '<?php echo $_SESSION["account_type"] ?? "free"; ?>'
