@@ -30,17 +30,31 @@
   
   <div id="dynamic-content"></div>
 
+  <!-- Load environment config -->
+  <script src="config.js"></script>
+  
   <!-- Load the Session Tracker SDK -->
   <script src="http://localhost:5173/session-tracker.umd.js"></script>
   <script>
-    // Initialize the tracker
-    const tracker = SessionTracker.init({
-      apiEndpoint: 'http://localhost:3001/api'
-    });
+    // Get environment-specific configuration
+    const config = CandleStickConfig.getConfig();
+    
+    if (config.enabled) {
+      // Initialize the tracker with environment config
+      const tracker = SessionTracker.init({
+        apiEndpoint: config.apiEndpoint,
+        userId: 'demo-user',
+        appName: 'Vanilla HTML Demo'
+      });
 
-    // Display session info
-    document.getElementById('status').innerHTML = 
-      '✅ Recording Session: <strong>' + tracker.getSessionId() + '</strong>';
+      // Display session info
+      document.getElementById('status').innerHTML = 
+        '✅ Recording Session: <strong>' + tracker.getSessionId() + '</strong><br>' +
+        '<small>Environment: ' + config.apiEndpoint + '</small>';
+    } else {
+      document.getElementById('status').innerHTML = 
+        '⚠️ Tracking disabled in this environment';
+    }
 
     // Example interactions
     function handleClick() {
