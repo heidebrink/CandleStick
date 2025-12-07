@@ -19,6 +19,14 @@ interface SessionData {
   id: string;
   startTime: number;
   events: any[];
+  metadata?: {
+    userId?: string;
+    userEmail?: string;
+    userName?: string;
+    userAgent?: string;
+    screenResolution?: string;
+    [key: string]: any;
+  };
 }
 
 // Get all sessions
@@ -34,7 +42,12 @@ app.get('/api/sessions', async (req, res) => {
           return {
             id: session.id,
             startTime: session.startTime,
-            eventCount: session.events.length
+            eventCount: session.events.length,
+            userId: session.metadata?.userId,
+            userEmail: session.metadata?.userEmail,
+            userName: session.metadata?.userName,
+            userAgent: session.metadata?.userAgent,
+            screenResolution: session.metadata?.screenResolution
           };
         })
     );
@@ -60,7 +73,7 @@ app.get('/api/sessions/:sessionId/events', async (req, res) => {
 app.post('/api/sessions/:sessionId/events', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { events } = req.body;
+    const { events, metadata } = req.body;
     const filePath = join(DATA_DIR, `${sessionId}.json`);
 
     let session: SessionData;
@@ -68,11 +81,16 @@ app.post('/api/sessions/:sessionId/events', async (req, res) => {
       const data = await fs.readFile(filePath, 'utf-8');
       session = JSON.parse(data);
       session.events.push(...events);
+      // Update metadata if provided
+      if (metadata) {
+        session.metadata = { ...session.metadata, ...metadata };
+      }
     } catch {
       session = {
         id: sessionId,
         startTime: Date.now(),
-        events
+        events,
+        metadata
       };
     }
 

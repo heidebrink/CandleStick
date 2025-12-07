@@ -64,12 +64,41 @@ See the `examples/` folder for framework-specific integration examples.
 ```javascript
 SessionTracker.init({
   apiEndpoint: 'http://localhost:3001/api',  // Required
-  sessionId: 'custom-id',                     // Optional
-  flushInterval: 5000,                        // Optional (ms)
-  metadata: {                                 // Optional
-    userId: 'user123',
+  
+  // User identification (recommended)
+  userId: 'user123',                          // User ID from your system
+  userName: 'John Doe',                       // User's display name
+  userEmail: 'john@example.com',              // User's email
+  
+  // Other options
+  sessionId: 'custom-id',                     // Optional: Custom session ID
+  flushInterval: 5000,                        // Optional: How often to send data (ms)
+  metadata: {                                 // Optional: Any custom data
+    accountType: 'premium',
     environment: 'production'
   }
+});
+```
+
+**User Identification Examples:**
+
+ASP.NET MVC:
+```javascript
+SessionTracker.init({
+  apiEndpoint: '/api',
+  userId: '@User.Identity.Name',
+  userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
+  userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value'
+});
+```
+
+PHP:
+```javascript
+SessionTracker.init({
+  apiEndpoint: '/api',
+  userId: '<?php echo $_SESSION["user_id"]; ?>',
+  userName: '<?php echo $_SESSION["user_name"]; ?>',
+  userEmail: '<?php echo $_SESSION["user_email"]; ?>'
 });
 ```
 

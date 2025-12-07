@@ -21,9 +21,12 @@
     <script>
         var tracker = SessionTracker.init({
             apiEndpoint: 'http://localhost:3001/api',
+            userId: '<?php echo $_SESSION["user_id"] ?? "guest"; ?>',
+            userName: '<?php echo $_SESSION["user_name"] ?? "Guest User"; ?>',
+            userEmail: '<?php echo $_SESSION["user_email"] ?? ""; ?>',
             metadata: {
                 phpSessionId: '<?php echo session_id(); ?>',
-                userId: '<?php echo $_SESSION["user_id"] ?? "anonymous"; ?>'
+                accountType: '<?php echo $_SESSION["account_type"] ?? "free"; ?>'
             }
         });
         

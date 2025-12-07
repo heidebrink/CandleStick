@@ -4,6 +4,9 @@ export interface SessionTrackerConfig {
   apiEndpoint: string;
   sessionId?: string;
   flushInterval?: number;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
   metadata?: Record<string, any>;
 }
 
@@ -21,7 +24,15 @@ export class SessionTracker {
       ...config
     };
     this.sessionId = config.sessionId || this.generateSessionId();
-    this.metadata = config.metadata || {};
+    this.metadata = {
+      userId: config.userId,
+      userEmail: config.userEmail,
+      userName: config.userName,
+      ...config.metadata,
+      userAgent: navigator.userAgent,
+      screenResolution: `${window.screen.width}x${window.screen.height}`,
+      timestamp: Date.now()
+    };
   }
 
   start() {

@@ -31,10 +31,12 @@
         (function() {
             var tracker = SessionTracker.init({
                 apiEndpoint: 'http://localhost:3001/api',
-                // Optional: Add user context from your MVC app
+                userId: '@User.Identity.Name',
+                userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
+                userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
                 metadata: {
-                    userId: '@User.Identity.Name',
-                    environment: '@ViewData["Environment"]'
+                    environment: '@ViewData["Environment"]',
+                    userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'
                 }
             });
             

@@ -12,7 +12,10 @@ export default function TestPage() {
     script.onload = () => {
       // @ts-ignore
       const tracker = window.SessionTracker.init({
-        apiEndpoint: '/api'
+        apiEndpoint: '/api',
+        userId: 'demo-user-123',
+        userName: 'Demo User',
+        userEmail: 'demo@example.com'
       });
       setSessionId(tracker.getSessionId());
       setIsTracking(true);

@@ -111,10 +111,19 @@
   border-color: #007bff;
 }
 
-.session-id {
+.session-user {
   font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #007bff;
+}
+
+.session-id {
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #999;
+  font-family: monospace;
 }
 
 .session-meta {

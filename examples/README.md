@@ -76,11 +76,21 @@ Example production setup:
 ```javascript
 SessionTracker.init({
   apiEndpoint: 'http://localhost:3001/api',  // Required: Your API endpoint
+  
+  // User identification (highly recommended)
+  userId: 'user123',                          // Optional: User ID from your system
+  userName: 'John Doe',                       // Optional: User's display name
+  userEmail: 'john@example.com',              // Optional: User's email
+  
+  // Other options
   sessionId: 'custom-id',                     // Optional: Custom session ID
   flushInterval: 5000,                        // Optional: How often to send data (ms)
-  metadata: {                                 // Optional: Custom metadata
-    userId: 'user123',
-    environment: 'production'
+  
+  // Additional custom metadata
+  metadata: {                                 // Optional: Any custom data
+    accountType: 'premium',
+    environment: 'production',
+    customField: 'value'
   }
 });
 ```

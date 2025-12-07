@@ -8,6 +8,11 @@ interface Session {
   id: string;
   startTime: number;
   eventCount: number;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  userAgent?: string;
+  screenResolution?: string;
 }
 
 function App() {

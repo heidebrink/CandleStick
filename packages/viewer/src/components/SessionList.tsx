@@ -2,6 +2,11 @@ interface Session {
   id: string;
   startTime: number;
   eventCount: number;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  userAgent?: string;
+  screenResolution?: string;
 }
 
 interface Props {
@@ -28,10 +33,16 @@ export default function SessionList({ sessions, selectedSession, onSelectSession
               className={`session-item ${selectedSession === session.id ? 'selected' : ''}`}
               onClick={() => onSelectSession(session.id)}
             >
+              {(session.userName || session.userEmail || session.userId) && (
+                <div className="session-user">
+                  👤 {session.userName || session.userEmail || session.userId}
+                </div>
+              )}
               <div className="session-id">{session.id}</div>
               <div className="session-meta">
                 <span>{new Date(session.startTime).toLocaleString()}</span>
                 <span>{session.eventCount} events</span>
+                {session.screenResolution && <span>📱 {session.screenResolution}</span>}
               </div>
             </div>
           ))

@@ -28,7 +28,10 @@
         // Wait for Blazor to be ready
         Blazor.start().then(function () {
             var tracker = SessionTracker.init({
-                apiEndpoint: 'http://localhost:3001/api'
+                apiEndpoint: 'http://localhost:3001/api',
+                userId: '@User.Identity.Name',
+                userName: '@User.Identity.Name',
+                userEmail: '@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value'
             });
             
             console.log('Blazor session tracking started:', tracker.getSessionId());
