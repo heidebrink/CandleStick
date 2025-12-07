@@ -1,0 +1,18 @@
+{
+  "name": "session-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:sdk": "cd packages/sdk && npm run dev",
+    "dev:viewer": "cd packages/viewer && npm run dev",
+    "build:sdk": "cd packages/sdk && npm run build",
+    "build:viewer": "cd packages/viewer && npm run build",
+    "dev": "concurrently \"npm run dev:sdk\" \"npm run dev:viewer\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

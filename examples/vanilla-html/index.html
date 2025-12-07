@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vanilla HTML Example</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+    .status { padding: 10px; background: #e8f5e9; border-radius: 4px; margin-bottom: 20px; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    input { padding: 8px; margin: 5px; width: 200px; }
+  </style>
+</head>
+<body>
+  <h1>Session Tracker - Vanilla HTML Example</h1>
+  
+  <div class="status" id="status">Initializing tracker...</div>
+  
+  <div>
+    <h2>Test Interactions</h2>
+    <button onclick="handleClick()">Click Me</button>
+    <button onclick="addElement()">Add Element</button>
+    <input type="text" placeholder="Type something..." />
+    <select>
+      <option>Option 1</option>
+      <option>Option 2</option>
+      <option>Option 3</option>
+    </select>
+  </div>
+  
+  <div id="dynamic-content"></div>
+
+  <!-- Load the Session Tracker SDK -->
+  <script src="http://localhost:5173/session-tracker.umd.js"></script>
+  <script>
+    // Initialize the tracker
+    const tracker = SessionTracker.init({
+      apiEndpoint: 'http://localhost:3001/api'
+    });
+
+    // Display session info
+    document.getElementById('status').innerHTML = 
+      '✅ Recording Session: <strong>' + tracker.getSessionId() + '</strong>';
+
+    // Example interactions
+    function handleClick() {
+      alert('Button clicked! This interaction is being recorded.');
+    }
+
+    function addElement() {
+      const div = document.createElement('div');
+      div.textContent = 'New element added at ' + new Date().toLocaleTimeString();
+      div.style.padding = '10px';
+      div.style.margin = '5px';
+      div.style.background = '#f0f0f0';
+      document.getElementById('dynamic-content').appendChild(div);
+    }
+  </script>
+</body>
+</html>

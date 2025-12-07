@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Angular App</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <app-root></app-root>
+  
+  <!-- Session Tracker SDK -->
+  <script src="http://localhost:5173/session-tracker.umd.js"></script>
+  <script>
+    // Initialize after Angular bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+      var tracker = SessionTracker.init({
+        apiEndpoint: 'http://localhost:3001/api'
+      });
+      
+      console.log('Angular session tracking started:', tracker.getSessionId());
+    });
+  </script>
+</body>
+</html>

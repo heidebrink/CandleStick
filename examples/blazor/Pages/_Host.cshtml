@@ -1,0 +1,41 @@
+@page "/"
+@namespace MyBlazorApp.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Blazor App</title>
+    <base href="~/" />
+    <link href="css/site.css" rel="stylesheet" />
+</head>
+<body>
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+    
+    <!-- Session Tracker SDK -->
+    <script src="http://localhost:5173/session-tracker.umd.js"></script>
+    <script>
+        // Wait for Blazor to be ready
+        Blazor.start().then(function () {
+            var tracker = SessionTracker.init({
+                apiEndpoint: 'http://localhost:3001/api'
+            });
+            
+            console.log('Blazor session tracking started:', tracker.getSessionId());
+            
+            // Optional: Store session ID for server-side logging
+            window.sessionTrackerId = tracker.getSessionId();
+        });
+    </script>
+</body>
+</html>

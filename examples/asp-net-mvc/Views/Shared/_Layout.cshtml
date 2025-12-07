@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - My ASP.NET MVC App</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav>
+            <!-- Your navigation here -->
+        </nav>
+    </header>
+    
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer>
+        <!-- Your footer here -->
+    </footer>
+
+    @RenderSection("Scripts", required: false)
+
+    <!-- Session Tracker SDK -->
+    <script src="http://localhost:5173/session-tracker.umd.js"></script>
+    <script>
+        (function() {
+            var tracker = SessionTracker.init({
+                apiEndpoint: 'http://localhost:3001/api',
+                // Optional: Add user context from your MVC app
+                metadata: {
+                    userId: '@User.Identity.Name',
+                    environment: '@ViewData["Environment"]'
+                }
+            });
+            
+            console.log('Session tracking started:', tracker.getSessionId());
+        })();
+    </script>
+</body>
+</html>
