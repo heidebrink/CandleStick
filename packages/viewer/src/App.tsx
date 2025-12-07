@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import SessionList from './components/SessionList';
 import SessionPlayer from './components/SessionPlayer';
 import TestPage from './components/TestPage';
+import OptInTestPage from './components/OptInTestPage';
 import CandleStickLogo from './components/CandleStickLogo';
 import './App.css';
 
@@ -20,7 +21,7 @@ interface Session {
 function App() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
-  const [view, setView] = useState<'viewer' | 'test'>('viewer');
+  const [view, setView] = useState<'viewer' | 'test' | 'optin'>('viewer');
 
   useEffect(() => {
     if (view === 'viewer') {
@@ -59,7 +60,13 @@ function App() {
             className={view === 'test' ? 'active' : ''}
             onClick={() => setView('test')}
           >
-            🧪 Test Tracking
+            🧪 Auto Tracking
+          </button>
+          <button 
+            className={view === 'optin' ? 'active' : ''}
+            onClick={() => setView('optin')}
+          >
+            🕯️ Opt-In Mode
           </button>
         </nav>
       </header>
@@ -85,8 +92,10 @@ function App() {
               )}
             </div>
           </div>
-        ) : (
+        ) : view === 'test' ? (
           <TestPage />
+        ) : (
+          <OptInTestPage />
         )}
       </main>
     </div>
