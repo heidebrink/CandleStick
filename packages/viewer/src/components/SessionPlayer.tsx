@@ -19,10 +19,12 @@ export default function SessionPlayer({ sessionId }: Props) {
       setError(null);
 
       try {
+        console.log('Loading session:', sessionId);
         const response = await fetch(`/api/sessions/${sessionId}/events`);
         if (!response.ok) throw new Error('Failed to load session');
         
         const data = await response.json();
+        console.log('Session events loaded:', data.events.length);
         
         if (containerRef.current) {
           containerRef.current.innerHTML = '';
@@ -35,8 +37,10 @@ export default function SessionPlayer({ sessionId }: Props) {
               autoPlay: false
             }
           });
+          console.log('Player initialized');
         }
       } catch (err) {
+        console.error('Session player error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);

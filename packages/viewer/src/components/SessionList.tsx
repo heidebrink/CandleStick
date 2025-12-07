@@ -89,7 +89,10 @@ export default function SessionList({ sessions, selectedSession, onSelectSession
             <div
               key={session.id}
               className={`session-item ${selectedSession === session.id ? 'selected' : ''}`}
-              onClick={() => onSelectSession(session.id)}
+              onClick={() => {
+                console.log('Session clicked:', session.id);
+                onSelectSession(session.id);
+              }}
             >
               {session.appName && (
                 <div className="session-app">
