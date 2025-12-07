@@ -26,23 +26,27 @@
     @RenderSection("Scripts", required: false)
 
     <!-- Session Tracker SDK -->
-    <script src="http://localhost:5173/session-tracker.umd.js"></script>
-    <script>
-        (function() {
-            var tracker = SessionTracker.init({
-                apiEndpoint: 'http://localhost:3001/api',
-                userId: '@User.Identity.Name',
-                userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
-                userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
-                appName: 'My ASP.NET MVC App',
-                metadata: {
-                    environment: '@ViewData["Environment"]',
-                    userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'
-                }
-            });
-            
-            console.log('Session tracking started:', tracker.getSessionId());
-        })();
-    </script>
+    @if (Configuration.GetValue<bool>("CandleStick:Enabled"))
+    {
+        <script src="https://cdn.yourapp.com/candlestick/session-tracker.umd.js"></script>
+        <script>
+            (function() {
+                var tracker = SessionTracker.init({
+                    apiEndpoint: '@Configuration["CandleStick:ApiEndpoint"]',
+                    userId: '@User.Identity.Name',
+                    userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
+                    userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
+                    appName: 'My ASP.NET MVC App',
+                    metadata: {
+                        environment: '@Environment.EnvironmentName',
+                        userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'
+                    }
+                });
+                
+                console.log('CandleStick tracking started:', tracker.getSessionId());
+            })();
+        </script>
+    }
+
 </body>
 </html>

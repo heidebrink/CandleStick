@@ -3,14 +3,28 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs/promises';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
-const PORT = 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
-app.use(cors());
+// CORS configuration based on environment
+const corsOptions = {
+  origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(','),
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 
-const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../data');
+const DATA_DIR = process.env.DATA_DIR 
+  ? join(process.cwd(), process.env.DATA_DIR)
+  : join(dirname(fileURLToPath(import.meta.url)), '../../data');
 
 // Ensure data directory exists
 await fs.mkdir(DATA_DIR, { recursive: true });
@@ -104,5 +118,10 @@ app.post('/api/sessions/:sessionId/events', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Session tracker server running on http://localhost:${PORT}`);
+  console.log(`🕯️  CandleStick API Server`);
+  console.log(`   Environment: ${NODE_ENV}`);
+  console.log(`   Port: ${PORT}`);
+  console.log(`   CORS: ${CORS_ORIGIN}`);
+  console.log(`   Data: ${DATA_DIR}`);
+  console.log(`   Ready: http://localhost:${PORT}`);
 });
