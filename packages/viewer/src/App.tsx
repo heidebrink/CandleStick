@@ -32,8 +32,10 @@ function App() {
 
   const fetchSessions = async () => {
     try {
+      console.log('Fetching sessions...');
       const response = await fetch('/api/sessions');
       const data = await response.json();
+      console.log('Fetched sessions:', data.length);
       setSessions(data);
     } catch (error) {
       console.error('Failed to fetch sessions:', error);
