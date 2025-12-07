@@ -4,6 +4,7 @@ export interface SessionTrackerConfig {
   apiEndpoint: string;
   sessionId?: string;
   flushInterval?: number;
+  sessionTimeout?: number; // Minutes of inactivity before new session
   userId?: string;
   userEmail?: string;
   userName?: string;
@@ -29,10 +30,14 @@ export class SessionTracker {
   constructor(config: SessionTrackerConfig) {
     this.config = {
       flushInterval: 5000,
+      sessionTimeout: 30, // Default 30 minutes
       showWidget: config.optIn || false,
       ...config
     };
-    this.sessionId = config.sessionId || this.generateSessionId();
+    
+    // Try to restore existing session or create new one
+    this.sessionId = this.getOrCreateSessionId();
+    
     this.metadata = {
       userId: config.userId,
       userEmail: config.userEmail,
@@ -51,6 +56,52 @@ export class SessionTracker {
     }
   }
 
+  private getOrCreateSessionId(): string {
+    const STORAGE_KEY = 'candlestick_session';
+    const TIMESTAMP_KEY = 'candlestick_session_timestamp';
+    
+    try {
+      const storedSessionId = localStorage.getItem(STORAGE_KEY);
+      const storedTimestamp = localStorage.getItem(TIMESTAMP_KEY);
+      
+      if (storedSessionId && storedTimestamp) {
+        const lastActivity = parseInt(storedTimestamp, 10);
+        const now = Date.now();
+        const timeoutMs = (this.config.sessionTimeout || 30) * 60 * 1000;
+        
+        // Check if session is still valid (within timeout)
+        if (now - lastActivity < timeoutMs) {
+          // Update timestamp for this page load
+          localStorage.setItem(TIMESTAMP_KEY, now.toString());
+          console.log('CandleStick: Resuming session', storedSessionId);
+          return storedSessionId;
+        } else {
+          console.log('CandleStick: Session expired, creating new session');
+        }
+      }
+      
+      // Create new session
+      const newSessionId = this.config.sessionId || this.generateSessionId();
+      localStorage.setItem(STORAGE_KEY, newSessionId);
+      localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+      console.log('CandleStick: New session created', newSessionId);
+      return newSessionId;
+    } catch (error) {
+      // If localStorage is not available, just generate a new session
+      console.warn('CandleStick: localStorage not available, using ephemeral session');
+      return this.config.sessionId || this.generateSessionId();
+    }
+  }
+
+  private updateSessionTimestamp() {
+    const TIMESTAMP_KEY = 'candlestick_session_timestamp';
+    try {
+      localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+    } catch (error) {
+      // Silently fail if localStorage is not available
+    }
+  }
+
   start() {
     // Don't auto-start if opt-in mode is enabled
     if (this.config.optIn && !this.isTracking) {
@@ -61,6 +112,8 @@ export class SessionTracker {
       this.stopRecording = record({
         emit: (event) => {
           this.events.push(event);
+          // Update session timestamp on user activity
+          this.updateSessionTimestamp();
         },
         checkoutEveryNms: 30000
       });
@@ -69,7 +122,10 @@ export class SessionTracker {
         this.flush();
       }, this.config.flushInterval);
 
-      window.addEventListener('beforeunload', () => this.flush());
+      window.addEventListener('beforeunload', () => {
+        this.flush();
+        // Don't clear session on unload - let timeout handle it
+      });
       
       this.isTracking = true;
     } catch (error) {
@@ -87,9 +143,24 @@ export class SessionTracker {
         clearInterval(this.flushTimer);
       }
       this.flush();
+      
+      // Clear session from storage when explicitly stopped
+      this.clearSession();
     } catch (error) {
       // Silently fail
       console.warn('CandleStick: Failed to stop recording', error);
+    }
+  }
+
+  private clearSession() {
+    const STORAGE_KEY = 'candlestick_session';
+    const TIMESTAMP_KEY = 'candlestick_session_timestamp';
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(TIMESTAMP_KEY);
+      console.log('CandleStick: Session cleared');
+    } catch (error) {
+      // Silently fail
     }
   }
 
