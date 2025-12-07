@@ -14,6 +14,7 @@ interface Session {
   userEmail?: string;
   userName?: string;
   appName?: string;
+  optInMode?: boolean;
   userAgent?: string;
   screenResolution?: string;
 }

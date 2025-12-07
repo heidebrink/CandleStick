@@ -38,6 +38,7 @@ interface SessionData {
     userEmail?: string;
     userName?: string;
     appName?: string;
+    optInMode?: boolean;
     userAgent?: string;
     screenResolution?: string;
     [key: string]: any;
@@ -62,6 +63,7 @@ app.get('/api/sessions', async (req, res) => {
             userEmail: session.metadata?.userEmail,
             userName: session.metadata?.userName,
             appName: session.metadata?.appName,
+            optInMode: session.metadata?.optInMode,
             userAgent: session.metadata?.userAgent,
             screenResolution: session.metadata?.screenResolution
           };

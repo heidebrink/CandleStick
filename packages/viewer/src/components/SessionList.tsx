@@ -8,6 +8,7 @@ interface Session {
   userEmail?: string;
   userName?: string;
   appName?: string;
+  optInMode?: boolean;
   userAgent?: string;
   screenResolution?: string;
 }
@@ -98,6 +99,11 @@ export default function SessionList({ sessions, selectedSession, onSelectSession
               {(session.userName || session.userEmail || session.userId) && (
                 <div className="session-user">
                   👤 {session.userName || session.userEmail || session.userId}
+                </div>
+              )}
+              {session.optInMode && (
+                <div className="session-optin">
+                  🕯️ User Opted In
                 </div>
               )}
               <div className="session-id">{session.id}</div>

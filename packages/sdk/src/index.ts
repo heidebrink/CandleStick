@@ -38,6 +38,7 @@ export class SessionTracker {
       userEmail: config.userEmail,
       userName: config.userName,
       appName: config.appName,
+      optInMode: config.optIn || false,
       ...config.metadata,
       userAgent: navigator.userAgent,
       screenResolution: `${window.screen.width}x${window.screen.height}`,
