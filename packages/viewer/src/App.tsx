@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import SessionList from './components/SessionList';
 import SessionPlayer from './components/SessionPlayer';
 import TestPage from './components/TestPage';
+import CandleStickLogo from './components/CandleStickLogo';
 import './App.css';
 
 interface Session {
@@ -40,19 +41,25 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Session Tracker</h1>
+        <div className="header-brand">
+          <CandleStickLogo size={48} />
+          <div className="brand-text">
+            <h1>CandleStick</h1>
+            <span className="tagline">Session Replay & Analytics</span>
+          </div>
+        </div>
         <nav>
           <button 
             className={view === 'viewer' ? 'active' : ''}
             onClick={() => setView('viewer')}
           >
-            View Sessions
+            📊 View Sessions
           </button>
           <button 
             className={view === 'test' ? 'active' : ''}
             onClick={() => setView('test')}
           >
-            Test Tracking
+            🧪 Test Tracking
           </button>
         </nav>
       </header>
