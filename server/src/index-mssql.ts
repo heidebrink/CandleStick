@@ -25,8 +25,22 @@ const sqlConfig: sql.config = {
   server: process.env.DB_SERVER || 'localhost',
   port: parseInt(process.env.DB_PORT || '1433', 10),
   database: process.env.DB_DATABASE || 'CandleStick',
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  // Support both Windows Authentication and SQL Authentication
+  ...(process.env.DB_INTEGRATED_SECURITY === 'true' 
+    ? { 
+        authentication: {
+          type: 'ntlm',
+          options: {
+            domain: process.env.DB_DOMAIN || '',
+            userName: process.env.DB_USER || '',
+            password: process.env.DB_PASSWORD || ''
+          }
+        }
+      }
+    : {
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD
+      }),
   options: {
     encrypt: process.env.DB_ENCRYPT === 'true',
     trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
