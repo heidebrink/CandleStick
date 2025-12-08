@@ -25,27 +25,57 @@
 
     @RenderSection("Scripts", required: false)
 
-    <!-- Session Tracker SDK -->
+    <!-- CandleStick Session Tracker SDK -->
     @if (Configuration.GetValue<bool>("CandleStick:Enabled"))
     {
-        <script src="https://cdn.yourapp.com/candlestick/session-tracker.umd.js"></script>
+        @* For local development, use the viewer app URL *@
+        @* For production, host the SDK file on your CDN *@
+        <script src="http://localhost:3000/session-tracker.umd.js"></script>
         <script>
             (function() {
-                var tracker = SessionTracker.init({
-                    apiEndpoint: '@Configuration["CandleStick:ApiEndpoint"]',
-                    userId: '@User.Identity.Name',
-                    userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
-                    userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
-                    appName: 'My ASP.NET MVC App',
-                    metadata: {
-                        environment: '@Environment.EnvironmentName',
-                        userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'
+                try {
+                    // Initialize CandleStick tracker
+                    window.candleStickTracker = SessionTracker.init({
+                        apiEndpoint: '@Configuration["CandleStick:ApiEndpoint"]',
+                        userId: '@User.Identity.Name',
+                        userName: '@User.Claims.FirstOrDefault(c => c.Type == "name")?.Value',
+                        userEmail: '@User.Claims.FirstOrDefault(c => c.Type == "email")?.Value',
+                        appName: 'My ASP.NET MVC App',
+                        
+                        // Opt-in mode: Shows a widget that lets users control recording
+                        // Set to false for automatic recording (default)
+                        optIn: @(Configuration.GetValue<bool>("CandleStick:OptInMode", false).ToString().ToLower()),
+                        showWidget: @(Configuration.GetValue<bool>("CandleStick:OptInMode", false).ToString().ToLower()),
+                        
+                        metadata: {
+                            environment: '@Environment.EnvironmentName',
+                            userRole: '@User.IsInRole("Admin") ? "Admin" : "User"'
+                        }
+                    });
+                    
+                    if (window.candleStickTracker) {
+                        console.log('✅ CandleStick initialized');
+                        console.log('📹 Session ID:', window.candleStickTracker.getSessionId());
+                        console.log('👁️  View your session at: http://localhost:3000');
+                        
+                        @if (Configuration.GetValue<bool>("CandleStick:OptInMode", false))
+                        {
+                            @:console.log('🎛️  Opt-in mode: Click the candle widget to start recording');
+                        }
+                        else
+                        {
+                            @:console.log('🎥 Auto-recording started');
+                        }
                     }
-                });
-                
-                console.log('CandleStick tracking started:', tracker.getSessionId());
+                } catch (error) {
+                    console.warn('⚠️  CandleStick failed to initialize:', error);
+                }
             })();
         </script>
+    }
+    else
+    {
+        <!-- CandleStick tracking is disabled in this environment -->
     }
 
 </body>

@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to CandleStick Demo</h1>
+    <p class="lead">This page is being tracked by CandleStick session recording.</p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🎥 Session Recording</h5>
+                <p class="card-text">Every interaction on this page is being recorded.</p>
+                <button class="btn btn-primary" onclick="alert('Button clicked!')">Click Me</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">📝 Form Interactions</h5>
+                <p class="card-text">Try typing in this input field:</p>
+                <input type="text" class="form-control" placeholder="Type something..." />
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">👁️ View Recording</h5>
+                <p class="card-text">Open the viewer to watch your session:</p>
+                <a href="http://localhost:3000" target="_blank" class="btn btn-success">Open Viewer</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-5" role="alert">
+    <h4 class="alert-heading">How It Works</h4>
+    <p>CandleStick is tracking this session. Here's what's being recorded:</p>
+    <ul>
+        <li>Mouse movements and clicks</li>
+        <li>Keyboard input (passwords are automatically masked)</li>
+        <li>Page navigation</li>
+        <li>Form interactions</li>
+        <li>Dynamic content changes</li>
+    </ul>
+    <hr>
+    <p class="mb-0">
+        <strong>Session ID:</strong> <span id="session-id">Loading...</span><br>
+        <strong>User:</strong> @(User.Identity.IsAuthenticated ? User.Identity.Name : "Anonymous")
+    </p>
+</div>
+
+@section Scripts {
+    <script>
+        // Display the session ID once tracking is initialized
+        setTimeout(function() {
+            if (typeof SessionTracker !== 'undefined') {
+                // The tracker is initialized in _Layout.cshtml
+                // We can access it through the window if we store it there
+                var sessionIdElement = document.getElementById('session-id');
+                if (sessionIdElement) {
+                    sessionIdElement.textContent = 'Check browser console for session ID';
+                }
+            }
+        }, 1000);
+    </script>
+}

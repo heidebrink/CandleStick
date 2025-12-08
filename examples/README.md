@@ -7,13 +7,15 @@ This folder contains examples of how to integrate the Session Tracker SDK into d
 The SDK is a simple JavaScript file that works in any web application. Just add these two lines before your closing `</body>` tag:
 
 ```html
-<script src="http://localhost:5173/session-tracker.umd.js"></script>
+<script src="http://localhost:3000/session-tracker.umd.js"></script>
 <script>
   var tracker = SessionTracker.init({
     apiEndpoint: 'http://localhost:3001/api'
   });
 </script>
 ```
+
+**Note:** For local development, the SDK is served by the viewer app at `http://localhost:3000/session-tracker.umd.js`.
 
 ## Framework-Specific Examples
 
@@ -23,9 +25,11 @@ See: `vanilla-html/index.html`
 - Works with any static site
 
 ### ASP.NET MVC
-See: `asp-net-mvc/Views/Shared/_Layout.cshtml`
+See: `asp-net-mvc/` folder ([README](asp-net-mvc/README.md))
 - Add to your `_Layout.cshtml` file
 - Automatically tracks all pages
+- Includes user identification with ASP.NET Identity
+- Environment-specific configuration
 
 ### Blazor (Server or WebAssembly)
 See: `blazor/Pages/_Host.cshtml`

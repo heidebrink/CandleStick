@@ -355,9 +355,41 @@ export class SessionTracker {
   private resumeTracking() {
     if (this.isTracking) return;
     
-    this.start();
-    this.isTracking = true;
-    this.updateWidgetState();
+    try {
+      // Create a new session when user clicks to start recording
+      this.sessionId = this.generateSessionId();
+      const STORAGE_KEY = 'candlestick_session';
+      const TIMESTAMP_KEY = 'candlestick_session_timestamp';
+      
+      try {
+        localStorage.setItem(STORAGE_KEY, this.sessionId);
+        localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+        console.log('CandleStick: New session created', this.sessionId);
+      } catch (error) {
+        // Silently fail if localStorage is not available
+      }
+      
+      // Clear any pending events from previous session
+      this.events = [];
+      
+      this.stopRecording = record({
+        emit: (event) => {
+          this.events.push(event);
+          // Update session timestamp on user activity
+          this.updateSessionTimestamp();
+        },
+        checkoutEveryNms: 30000
+      });
+
+      this.flushTimer = window.setInterval(() => {
+        this.flush();
+      }, this.config.flushInterval);
+
+      this.isTracking = true;
+      this.updateWidgetState();
+    } catch (error) {
+      console.warn('CandleStick: Failed to resume tracking', error);
+    }
   }
 
   removeWidget() {

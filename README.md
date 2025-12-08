@@ -42,7 +42,7 @@ cd packages/viewer && npm run dev
 The SDK works with **any web framework** - just add these two lines before your closing `</body>` tag:
 
 ```html
-<script src="http://localhost:5173/session-tracker.umd.js"></script>
+<script src="http://localhost:3000/session-tracker.umd.js"></script>
 <script>
   var tracker = SessionTracker.init({
     apiEndpoint: 'http://localhost:3001/api'
@@ -50,8 +50,11 @@ The SDK works with **any web framework** - just add these two lines before your 
 </script>
 ```
 
+**Note:** The SDK is served by the viewer app at `http://localhost:3000/session-tracker.umd.js`
+
 That's it! Works with:
-- ✅ ASP.NET MVC / Blazor
+- ✅ **ASP.NET MVC** - [Quick Start](examples/asp-net-mvc/QUICK-START.md) | [Full Guide](examples/asp-net-mvc/README.md)
+- ✅ ASP.NET Blazor
 - ✅ PHP / Laravel / WordPress
 - ✅ React / Vue / Angular
 - ✅ Vanilla HTML/JavaScript
