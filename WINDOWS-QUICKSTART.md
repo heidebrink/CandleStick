@@ -1,4 +1,4 @@
-# CandleStick Windows Deployment - Quick Start
+# CandleStick Windows Deployment - Quick Start UPDATED
 
 Fast deployment for Windows Server on AWS Lightsail (via RDP).
 
