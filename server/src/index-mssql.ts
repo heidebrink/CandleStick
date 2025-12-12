@@ -1,14 +1,12 @@
-import * as express from 'express';
-import * as cors from 'cors';
-import * as sql from 'mssql';
-import * as dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import express from 'express';
+import cors from 'cors';
+import sql from 'mssql';
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-const app = express.default();
+const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
@@ -19,7 +17,7 @@ const corsOptions = {
   credentials: true
 };
 
-app.use(cors.default(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 
 // SQL Server configuration
