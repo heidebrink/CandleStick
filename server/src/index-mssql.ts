@@ -22,9 +22,7 @@ app.use(express.json({ limit: '50mb' }));
 
 // SQL Server configuration
 const sqlConfig: sql.config = {
-  user: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'CandleStick',
+  database: process.env.DB_DATABASE || 'CandleStick',
   server: process.env.DB_SERVER || 'localhost',
   pool: {
     max: 10,
@@ -33,9 +31,17 @@ const sqlConfig: sql.config = {
   },
   options: {
     encrypt: process.env.DB_ENCRYPT === 'true',
-    trustServerCertificate: process.env.DB_TRUST_CERT === 'true'
+    trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
+    trustedConnection: true
   }
 };
+
+// Add user/password only if provided (for SQL Server authentication)
+if (process.env.DB_USER && process.env.DB_PASSWORD) {
+  sqlConfig.user = process.env.DB_USER;
+  sqlConfig.password = process.env.DB_PASSWORD;
+  sqlConfig.options!.trustedConnection = false;
+}
 
 interface SessionData {
   id: string;
