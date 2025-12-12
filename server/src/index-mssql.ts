@@ -1,55 +1,41 @@
-import express from 'express';
-import cors from 'cors';
-import sql from 'mssql';
-import dotenv from 'dotenv';
+import * as express from 'express';
+import * as cors from 'cors';
+import * as sql from 'mssql';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 // Load environment variables
-dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+dotenv.config();
 
-const app = express();
+const app = express.default();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
-// CORS configuration
+// CORS configuration based on environment
 const corsOptions = {
   origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(','),
   credentials: true
 };
 
-app.use(cors(corsOptions));
+app.use(cors.default(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 
 // SQL Server configuration
 const sqlConfig: sql.config = {
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'CandleStick',
   server: process.env.DB_SERVER || 'localhost',
-  port: parseInt(process.env.DB_PORT || '1433', 10),
-  database: process.env.DB_DATABASE || 'CandleStick',
-  // Support both Windows Authentication and SQL Authentication
-  ...(process.env.DB_INTEGRATED_SECURITY === 'true' 
-    ? { 
-        authentication: {
-          type: 'ntlm',
-          options: {
-            domain: process.env.DB_DOMAIN || '',
-            userName: process.env.DB_USER || '',
-            password: process.env.DB_PASSWORD || ''
-          }
-        }
-      }
-    : {
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD
-      }),
-  options: {
-    encrypt: process.env.DB_ENCRYPT === 'true',
-    trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
-    enableArithAbort: true
-  },
   pool: {
     max: 10,
     min: 0,
     idleTimeoutMillis: 30000
+  },
+  options: {
+    encrypt: process.env.DB_ENCRYPT === 'true',
+    trustServerCertificate: process.env.DB_TRUST_CERT === 'true'
   }
 };
 
@@ -69,62 +55,72 @@ interface SessionData {
   };
 }
 
-// Initialize database connection
-let pool: sql.ConnectionPool;
-
+// Initialize database
 async function initDatabase() {
   try {
-    pool = await sql.connect(sqlConfig);
-    console.log('✅ Connected to SQL Server');
+    await sql.connect(sqlConfig);
     
-    // Test query
-    await pool.request().query('SELECT 1');
-    console.log('✅ Database connection verified');
+    // Create sessions table if it doesn't exist
+    const request = new sql.Request();
+    await request.query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='sessions' AND xtype='U')
+      CREATE TABLE sessions (
+        id NVARCHAR(255) PRIMARY KEY,
+        startTime BIGINT NOT NULL,
+        events NTEXT NOT NULL,
+        metadata NTEXT,
+        createdAt DATETIME2 DEFAULT GETDATE(),
+        updatedAt DATETIME2 DEFAULT GETDATE()
+      )
+    `);
+    
+    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('Database initialization failed:', error);
     process.exit(1);
   }
 }
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  try {
-    await pool.request().query('SELECT 1');
-    res.json({ status: 'healthy', database: 'connected' });
-  } catch (error) {
-    res.status(500).json({ status: 'unhealthy', database: 'disconnected' });
-  }
-});
-
 // Get all sessions
 app.get('/api/sessions', async (req, res) => {
   try {
-    const result = await pool.request().query(`
-      SELECT 
-        s.Id as id,
-        s.StartTime as startTime,
-        COUNT(e.Id) as eventCount,
-        s.UserId as userId,
-        s.UserEmail as userEmail,
-        s.UserName as userName,
-        s.AppName as appName,
-        s.OptInMode as optInMode,
-        s.UserAgent as userAgent,
-        s.ScreenResolution as screenResolution,
-        s.CreatedAt as createdAt,
-        s.UpdatedAt as updatedAt
-      FROM Sessions s
-      LEFT JOIN SessionEvents e ON s.Id = e.SessionId
-      GROUP BY 
-        s.Id, s.StartTime, s.UserId, s.UserEmail, s.UserName, 
-        s.AppName, s.OptInMode, s.UserAgent, s.ScreenResolution,
-        s.CreatedAt, s.UpdatedAt
-      ORDER BY s.StartTime DESC
+    const request = new sql.Request();
+    const result = await request.query(`
+      SELECT id, startTime, 
+             LEN(events) as eventLength,
+             metadata
+      FROM sessions 
+      ORDER BY startTime DESC
     `);
-    
-    res.json(result.recordset);
+
+    const sessions = result.recordset.map((row: any) => {
+      let metadata = {};
+      try {
+        metadata = row.metadata ? JSON.parse(row.metadata) : {};
+      } catch (e) {
+        console.warn('Failed to parse metadata for session:', row.id);
+      }
+
+      // Estimate event count from JSON length (rough approximation)
+      const eventCount = Math.floor(row.eventLength / 100);
+
+      return {
+        id: row.id,
+        startTime: row.startTime,
+        eventCount,
+        userId: metadata.userId,
+        userEmail: metadata.userEmail,
+        userName: metadata.userName,
+        appName: metadata.appName,
+        optInMode: metadata.optInMode,
+        userAgent: metadata.userAgent,
+        screenResolution: metadata.screenResolution
+      };
+    });
+
+    res.json(sessions);
   } catch (error) {
-    console.error('Error fetching sessions:', error);
+    console.error('Failed to fetch sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
@@ -132,193 +128,100 @@ app.get('/api/sessions', async (req, res) => {
 // Get session events
 app.get('/api/sessions/:sessionId/events', async (req, res) => {
   try {
-    const { sessionId } = req.params;
+    const request = new sql.Request();
+    request.input('sessionId', sql.NVarChar, req.params.sessionId);
     
-    const result = await pool.request()
-      .input('sessionId', sql.NVarChar(100), sessionId)
-      .query(`
-        SELECT EventData, EventIndex
-        FROM SessionEvents
-        WHERE SessionId = @sessionId
-        ORDER BY EventIndex ASC
-      `);
-    
+    const result = await request.query(`
+      SELECT events FROM sessions WHERE id = @sessionId
+    `);
+
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Session not found' });
     }
-    
-    // Parse JSON events
-    const events = result.recordset.map(row => JSON.parse(row.EventData));
-    
+
+    const events = JSON.parse(result.recordset[0].events);
     res.json({ events });
   } catch (error) {
-    console.error('Error fetching session events:', error);
-    res.status(500).json({ error: 'Failed to fetch session events' });
+    console.error('Failed to fetch session events:', error);
+    res.status(404).json({ error: 'Session not found' });
   }
 });
 
 // Save session events
 app.post('/api/sessions/:sessionId/events', async (req, res) => {
-  const transaction = new sql.Transaction(pool);
-  
   try {
     const { sessionId } = req.params;
     const { events, metadata } = req.body;
-    
-    if (!events || !Array.isArray(events)) {
-      return res.status(400).json({ error: 'Events array is required' });
-    }
-    
-    await transaction.begin();
-    
+
+    const request = new sql.Request();
+    request.input('sessionId', sql.NVarChar, sessionId);
+
     // Check if session exists
-    const sessionCheck = await transaction.request()
-      .input('sessionId', sql.NVarChar(100), sessionId)
-      .query('SELECT Id FROM Sessions WHERE Id = @sessionId');
-    
-    if (sessionCheck.recordset.length === 0) {
+    const existingResult = await request.query(`
+      SELECT events, metadata FROM sessions WHERE id = @sessionId
+    `);
+
+    if (existingResult.recordset.length > 0) {
+      // Update existing session
+      const existingEvents = JSON.parse(existingResult.recordset[0].events || '[]');
+      const existingMetadata = existingResult.recordset[0].metadata 
+        ? JSON.parse(existingResult.recordset[0].metadata) 
+        : {};
+
+      const updatedEvents = [...existingEvents, ...events];
+      const updatedMetadata = { ...existingMetadata, ...metadata };
+
+      const updateRequest = new sql.Request();
+      updateRequest.input('sessionId', sql.NVarChar, sessionId);
+      updateRequest.input('events', sql.NText, JSON.stringify(updatedEvents));
+      updateRequest.input('metadata', sql.NText, JSON.stringify(updatedMetadata));
+
+      await updateRequest.query(`
+        UPDATE sessions 
+        SET events = @events, 
+            metadata = @metadata,
+            updatedAt = GETDATE()
+        WHERE id = @sessionId
+      `);
+    } else {
       // Create new session
-      await transaction.request()
-        .input('id', sql.NVarChar(100), sessionId)
-        .input('startTime', sql.BigInt, metadata?.timestamp || Date.now())
-        .input('userId', sql.NVarChar(255), metadata?.userId || null)
-        .input('userEmail', sql.NVarChar(255), metadata?.userEmail || null)
-        .input('userName', sql.NVarChar(255), metadata?.userName || null)
-        .input('appName', sql.NVarChar(255), metadata?.appName || null)
-        .input('optInMode', sql.Bit, metadata?.optInMode || false)
-        .input('userAgent', sql.NVarChar(500), metadata?.userAgent || null)
-        .input('screenResolution', sql.NVarChar(50), metadata?.screenResolution || null)
-        .query(`
-          INSERT INTO Sessions (
-            Id, StartTime, UserId, UserEmail, UserName, 
-            AppName, OptInMode, UserAgent, ScreenResolution
-          )
-          VALUES (
-            @id, @startTime, @userId, @userEmail, @userName,
-            @appName, @optInMode, @userAgent, @screenResolution
-          )
-        `);
-    } else if (metadata) {
-      // Update session metadata
-      await transaction.request()
-        .input('sessionId', sql.NVarChar(100), sessionId)
-        .input('userId', sql.NVarChar(255), metadata.userId || null)
-        .input('userEmail', sql.NVarChar(255), metadata.userEmail || null)
-        .input('userName', sql.NVarChar(255), metadata.userName || null)
-        .input('appName', sql.NVarChar(255), metadata.appName || null)
-        .input('optInMode', sql.Bit, metadata.optInMode || false)
-        .input('userAgent', sql.NVarChar(500), metadata.userAgent || null)
-        .input('screenResolution', sql.NVarChar(50), metadata.screenResolution || null)
-        .query(`
-          UPDATE Sessions
-          SET 
-            UserId = COALESCE(@userId, UserId),
-            UserEmail = COALESCE(@userEmail, UserEmail),
-            UserName = COALESCE(@userName, UserName),
-            AppName = COALESCE(@appName, AppName),
-            OptInMode = @optInMode,
-            UserAgent = COALESCE(@userAgent, UserAgent),
-            ScreenResolution = COALESCE(@screenResolution, ScreenResolution),
-            UpdatedAt = GETDATE()
-          WHERE Id = @sessionId
-        `);
+      const insertRequest = new sql.Request();
+      insertRequest.input('sessionId', sql.NVarChar, sessionId);
+      insertRequest.input('startTime', sql.BigInt, Date.now());
+      insertRequest.input('events', sql.NText, JSON.stringify(events));
+      insertRequest.input('metadata', sql.NText, JSON.stringify(metadata || {}));
+
+      await insertRequest.query(`
+        INSERT INTO sessions (id, startTime, events, metadata)
+        VALUES (@sessionId, @startTime, @events, @metadata)
+      `);
     }
-    
-    // Get current max event index
-    const maxIndexResult = await transaction.request()
-      .input('sessionId', sql.NVarChar(100), sessionId)
-      .query('SELECT ISNULL(MAX(EventIndex), -1) as maxIndex FROM SessionEvents WHERE SessionId = @sessionId');
-    
-    let currentIndex = maxIndexResult.recordset[0].maxIndex + 1;
-    
-    // Insert events
-    for (const event of events) {
-      await transaction.request()
-        .input('sessionId', sql.NVarChar(100), sessionId)
-        .input('eventData', sql.NVarChar(sql.MAX), JSON.stringify(event))
-        .input('eventIndex', sql.Int, currentIndex++)
-        .query(`
-          INSERT INTO SessionEvents (SessionId, EventData, EventIndex)
-          VALUES (@sessionId, @eventData, @eventIndex)
-        `);
-    }
-    
-    await transaction.commit();
-    res.json({ success: true, eventsAdded: events.length });
-    
+
+    res.json({ success: true });
   } catch (error) {
-    await transaction.rollback();
-    console.error('Error saving session events:', error);
+    console.error('Failed to save session events:', error);
     res.status(500).json({ error: 'Failed to save events' });
   }
 });
 
-// Delete session
-app.delete('/api/sessions/:sessionId', async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    
-    await pool.request()
-      .input('sessionId', sql.NVarChar(100), sessionId)
-      .query('DELETE FROM Sessions WHERE Id = @sessionId');
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting session:', error);
-    res.status(500).json({ error: 'Failed to delete session' });
-  }
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    database: 'connected'
+  });
 });
 
-// Cleanup old sessions (optional endpoint)
-app.post('/api/cleanup', async (req, res) => {
-  try {
-    const { daysOld = 30 } = req.body;
-    
-    const result = await pool.request()
-      .input('daysOld', sql.Int, daysOld)
-      .query(`
-        DELETE FROM Sessions 
-        WHERE CreatedAt < DATEADD(day, -@daysOld, GETDATE())
-      `);
-    
-    res.json({ 
-      success: true, 
-      deletedSessions: result.rowsAffected[0] 
-    });
-  } catch (error) {
-    console.error('Error cleaning up sessions:', error);
-    res.status(500).json({ error: 'Failed to cleanup sessions' });
-  }
-});
-
-// Start server
-async function start() {
-  await initDatabase();
-  
+// Initialize database and start server
+initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`🕯️  CandleStick API Server (SQL Server)`);
     console.log(`   Environment: ${NODE_ENV}`);
     console.log(`   Port: ${PORT}`);
     console.log(`   CORS: ${CORS_ORIGIN}`);
-    console.log(`   Database: ${sqlConfig.server}/${sqlConfig.database}`);
+    console.log(`   Database: SQL Server`);
     console.log(`   Ready: http://localhost:${PORT}`);
   });
-}
-
-// Handle shutdown gracefully
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, closing database connection...');
-  await pool.close();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, closing database connection...');
-  await pool.close();
-  process.exit(0);
-});
-
-start().catch(error => {
-  console.error('Failed to start server:', error);
-  process.exit(1);
 });
