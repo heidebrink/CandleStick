@@ -136,10 +136,10 @@ New-NetFirewallRule -DisplayName "CandleStick Viewer" -Direction Inbound -Protoc
 
 ```powershell
 cd C:\inetpub\CandleStick\server
-pm2 start npm --name "candlestick-api" -- run start:mssql
+pm2 start dist/index-mssql.js --name "candlestick-api"
 
 cd ..\packages\viewer
-pm2 start npm --name "candlestick-viewer" -- run preview
+pm2 start "npm run preview" --name "candlestick-viewer"
 
 pm2 save
 pm2 status
