@@ -94,7 +94,7 @@ app.get('/api/sessions', async (req, res) => {
     `);
 
     const sessions = result.recordset.map((row: any) => {
-      let metadata = {};
+      let metadata: any = {};
       try {
         metadata = row.metadata ? JSON.parse(row.metadata) : {};
       } catch (e) {
