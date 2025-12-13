@@ -1,0 +1,165 @@
+# CloudWatch Alarms Configuration
+# Deploy with: aws cloudformation deploy --template-file alerts.yml --stack-name candlestick-alerts
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CandleStick Monitoring Alerts'
+
+Parameters:
+  LoadBalancerName:
+    Type: String
+    Default: 'candlestick-lb'
+    Description: 'Name of the Application Load Balancer'
+  
+  ECSClusterName:
+    Type: String
+    Default: 'candlestick-cluster'
+    Description: 'Name of the ECS Cluster'
+  
+  ECSServiceName:
+    Type: String
+    Default: 'candlestick-service'
+    Description: 'Name of the ECS Service'
+  
+  DBInstanceIdentifier:
+    Type: String
+    Default: 'candlestick-db'
+    Description: 'RDS Instance Identifier'
+  
+  NotificationEmail:
+    Type: String
+    Description: 'Email address for alerts'
+
+Resources:
+  # SNS Topic for alerts
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'candlestick-alerts'
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
+
+  # High Error Rate Alert
+  HighErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-HighErrorRate'
+      AlarmDescription: 'Alert when 5XX error rate > 5%'
+      MetricName: 'HTTPCode_Target_5XX_Count'
+      Namespace: 'AWS/ApplicationELB'
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !Ref LoadBalancerName
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # High Response Time Alert
+  HighResponseTimeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-HighResponseTime'
+      AlarmDescription: 'Alert when response time > 2 seconds'
+      MetricName: 'TargetResponseTime'
+      Namespace: 'AWS/ApplicationELB'
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 2
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !Ref LoadBalancerName
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # High CPU Usage Alert
+  HighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-HighCPU'
+      AlarmDescription: 'Alert when CPU usage > 80%'
+      MetricName: 'CPUUtilization'
+      Namespace: 'AWS/ECS'
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ServiceName
+          Value: !Ref ECSServiceName
+        - Name: ClusterName
+          Value: !Ref ECSClusterName
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # High Memory Usage Alert
+  HighMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-HighMemory'
+      AlarmDescription: 'Alert when memory usage > 80%'
+      MetricName: 'MemoryUtilization'
+      Namespace: 'AWS/ECS'
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: ServiceName
+          Value: !Ref ECSServiceName
+        - Name: ClusterName
+          Value: !Ref ECSClusterName
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # Database CPU Alert
+  DatabaseCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-DatabaseHighCPU'
+      AlarmDescription: 'Alert when database CPU > 80%'
+      MetricName: 'CPUUtilization'
+      Namespace: 'AWS/RDS'
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref DBInstanceIdentifier
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # Low Storage Alert
+  LowStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: 'CandleStick-LowStorage'
+      AlarmDescription: 'Alert when free storage < 2GB'
+      MetricName: 'FreeStorageSpace'
+      Namespace: 'AWS/RDS'
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2000000000  # 2GB in bytes
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref DBInstanceIdentifier
+      AlarmActions:
+        - !Ref AlertTopic
+
+Outputs:
+  AlertTopicArn:
+    Description: 'SNS Topic ARN for alerts'
+    Value: !Ref AlertTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-AlertTopic'
